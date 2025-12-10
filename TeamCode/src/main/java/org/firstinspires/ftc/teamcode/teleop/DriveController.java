@@ -41,7 +41,7 @@ public class DriveController {
         swerveDrive.setModuleAdjustments(SwerveTeleOpConfig.module1Adjust, SwerveTeleOpConfig.module2Adjust,
                 SwerveTeleOpConfig.module3Adjust);
 
-        double translateX = -gamepad.left_stick_x * SwerveTeleOpConfig.driveScale;
+        double translateX = gamepad.left_stick_x * SwerveTeleOpConfig.driveScale;
         double translateY = -gamepad.left_stick_y * SwerveTeleOpConfig.driveScale;
         double rotationInput = gamepad.right_stick_x;
         double rotation = Math.pow(rotationInput, 3) * SwerveTeleOpConfig.rotationScale;

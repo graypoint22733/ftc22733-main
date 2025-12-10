@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-// import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -19,12 +19,14 @@ import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 
 public class SwerveDrive {
 
-    // final private IMU imu;
+    private final IMU imu;
 
     final private myDcMotorEx mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2;
     final private AnalogInput mod1E, mod2E, mod3E;
     final private Telemetry telemetry;
     final private boolean eff;
+    private final boolean useImu;
+    private final boolean fieldCentric;
     private double module1Adjust = 337, module2Adjust = 285, module3Adjust = 0;
     private final PIDcontroller mod1PID = new PIDcontroller(0.1, 0.002, 3, 1, 0.5);
     private final PIDcontroller mod2PID = new PIDcontroller(0.1, 0.002, 2, 0.5, 0.5);
@@ -37,7 +39,8 @@ public class SwerveDrive {
     double heading;
     private double imuOffset = 0;
 
-    public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff) {
+    public SwerveDrive(Telemetry telemetry, HardwareMap hardwareMap, boolean eff, boolean useImu,
+            boolean fieldCentric) {
         mod1m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod1m1"));
         mod1m2 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod1m2"));
         mod2m1 = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "mod2m1"));
@@ -63,17 +66,24 @@ public class SwerveDrive {
         mod2m2.setDirection(DcMotorSimple.Direction.REVERSE);
         mod3m2.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // IMU foundImu = hardwareMap.tryGet(IMU.class, "pinpoint");
-        // if (foundImu == null) {
-        //     foundImu = hardwareMap.get(IMU.class, "imu");
-        // }
+        this.useImu = useImu;
+        this.fieldCentric = fieldCentric;
+        if (useImu) {
+            IMU foundImu = hardwareMap.tryGet(IMU.class, "pinpoint");
+            if (foundImu == null) {
+                foundImu = hardwareMap.tryGet(IMU.class, "imu");
+            }
 
-        // IMU.Parameters localParams = new IMU.Parameters(new RevHubOrientationOnRobot(
-        //         RevHubOrientationOnRobot.LogoFacingDirection.UP,
-        //         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
-        // // Initialize IMU with parameters
-        // foundImu.initialize(localParams);
-        // imu = foundImu;
+            if (foundImu != null) {
+                IMU.Parameters localParams = new IMU.Parameters(new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                foundImu.initialize(localParams);
+            }
+            imu = foundImu;
+        } else {
+            imu = null;
+        }
         // Store telemetry and efficiency flag
         this.telemetry = telemetry;
         this.eff = eff;
@@ -82,22 +92,22 @@ public class SwerveDrive {
     /**
      * Drive using explicit x, y, and rotation values.
      */
-    public void drive(double x, double y, double rot) {
+    public void drive(double strafe, double forward, double rot) {
         double mod1P = readEncoderDegrees(mod1E, module1Adjust);
         double mod2P = readEncoderDegrees(mod2E, module2Adjust);
         double mod3P = readEncoderDegrees(mod3E, module3Adjust);
 
         // Update heading of robot
-        heading = getHeadingInDegrees();
+        heading = useImu && imu != null ? getHeadingInDegrees() : 0;
 
         // Retrieve the angle and power for each module
-        double[] output = swavemath.calculate(y, -x, -rot, heading, false);
+        double[] output = swavemath.calculate(forward, strafe, rot, heading, fieldCentric);
         double mod1power = output[0];
         double mod3power = output[1];
         double mod2power = output[2];
 
         // keep previous module heading if joystick not being used
-        if (y != 0 || x != 0 || rot != 0) {
+        if (forward != 0 || strafe != 0 || rot != 0) {
             mod1reference = output[3];
             mod3reference = output[5];
             mod2reference = output[4];
@@ -162,8 +172,10 @@ public class SwerveDrive {
      * Reset IMU yaw to zero.
      */
     public void resetIMU() {
-        // imu.resetYaw();
         imuOffset = 0;
+        if (imu != null) {
+            imu.resetYaw();
+        }
     }
 
     // Tune module PIDs
@@ -199,7 +211,9 @@ public class SwerveDrive {
      * Internal helper to get heading from IMU.
      */
     private double getHeadingInDegrees() {
-        // return AngleUnit.normalizeDegrees(-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - imuOffset);
+        if (imu != null) {
+            return AngleUnit.normalizeDegrees(-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) - imuOffset);
+        }
         return 0;
     }
 
