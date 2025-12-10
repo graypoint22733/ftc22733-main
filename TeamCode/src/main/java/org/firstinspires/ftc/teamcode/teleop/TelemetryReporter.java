@@ -28,9 +28,9 @@ public class TelemetryReporter {
         telemetry.addData("Pose", "x=%.2f, y=%.2f, h=%.1f", pose.getX(), pose.getY(), pose.getHeading());
         telemetry.addData("Drive", "x=%.2f y=%.2f rot=%.2f", driveState.getTranslateX(), driveState.getTranslateY(),
                 driveState.getRotation());
-        telemetry.addData("Flywheel", manipulatorState.getFlywheelPower());
-        telemetry.addData("Turret yaw", manipulatorState.getYawPower());
-        telemetry.addData("Indexer", manipulatorState.getIndexerState());
+        // telemetry.addData("Flywheel", manipulatorState.getFlywheelPower());
+        // telemetry.addData("Turret yaw", manipulatorState.getYawPower());
+        // telemetry.addData("Indexer", manipulatorState.getIndexerState());
         telemetry.addData("IMU Reset", gamepad1.a);
         telemetry.update();
 
@@ -40,9 +40,9 @@ public class TelemetryReporter {
         packet.put("driveX", driveState.getTranslateX());
         packet.put("driveY", driveState.getTranslateY());
         packet.put("rotation", driveState.getRotation());
-        packet.put("flywheelPower", manipulatorState.getFlywheelPower());
-        packet.put("yawPower", manipulatorState.getYawPower());
-        packet.put("indexer", manipulatorState.getIndexerState().name());
+        // packet.put("flywheelPower", manipulatorState.getFlywheelPower());
+        // packet.put("yawPower", manipulatorState.getYawPower());
+        // packet.put("indexer", manipulatorState.getIndexerState().name());
         packet.put("imuReset", gamepad1.a);
         packet.put("leftTrigger", gamepad1.left_trigger);
         packet.put("rightTrigger", gamepad1.right_trigger);
