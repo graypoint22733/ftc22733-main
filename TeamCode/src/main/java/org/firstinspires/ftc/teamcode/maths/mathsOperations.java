@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.maths;
 
-public class mathsOperations {
+public class  mathsOperations {
 
     //normalizes the angle given
     public static double angleWrap(double wrap){
