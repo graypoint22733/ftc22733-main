@@ -51,6 +51,8 @@ public class SwerveDrive {
         mod2E = hardwareMap.get(AnalogInput.class, "mod2E");
         mod3E = hardwareMap.get(AnalogInput.class, "mod3E");
 
+        mod3m1.setDirection(DcMotorSimple.Direction.REVERSE);
+
         for (myDcMotorEx motor : new myDcMotorEx[] { mod1m1, mod1m2, mod2m1, mod2m2, mod3m1, mod3m2 }) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
