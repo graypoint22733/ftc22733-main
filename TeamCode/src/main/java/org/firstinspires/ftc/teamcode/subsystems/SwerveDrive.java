@@ -27,6 +27,7 @@ public class SwerveDrive {
     final private boolean eff;
     private final boolean useImu;
     private final boolean fieldCentric;
+    private boolean initializedReferences = false;
     private double module1Adjust = 337, module2Adjust = 285, module3Adjust = 0;
     private final PIDcontroller mod1PID = new PIDcontroller(0.1, 0.002, 3, 1, 0.5);
     private final PIDcontroller mod2PID = new PIDcontroller(0.1, 0.002, 2, 0.5, 0.5);
@@ -98,6 +99,13 @@ public class SwerveDrive {
         double mod1P = readEncoderDegrees(mod1E, module1Adjust);
         double mod2P = readEncoderDegrees(mod2E, module2Adjust);
         double mod3P = readEncoderDegrees(mod3E, module3Adjust);
+
+        if (!initializedReferences) {
+            mod1reference = mod1P;
+            mod2reference = mod2P;
+            mod3reference = mod3P;
+            initializedReferences = true;
+        }
 
         // Update heading of robot
         heading = useImu && imu != null ? getHeadingInDegrees() : 0;

@@ -18,8 +18,8 @@ public class SwerveTeleOp extends LinearOpMode {
         MultipleTelemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryReporter telemetryReporter = new TelemetryReporter(telemetry);
 
-        SwerveDrive swerve = new SwerveDrive(telemetry, hardwareMap, true, SwerveTeleOpConfig.useImu,
-                SwerveTeleOpConfig.fieldCentric);
+        SwerveDrive swerve = new SwerveDrive(telemetry, hardwareMap, true, false,
+                false);
         DriveController driveController = new DriveController(swerve);
 
         // Turret turret = new Turret(hardwareMap);
