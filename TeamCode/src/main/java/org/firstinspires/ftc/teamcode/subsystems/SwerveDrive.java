@@ -100,6 +100,10 @@ public class SwerveDrive {
         double mod2P = readEncoderDegrees(mod2E, module2Adjust);
         double mod3P = readEncoderDegrees(mod3E, module3Adjust);
 
+        // Prevent tiny encoder noise from commanding a correction when sticks are idle.
+        boolean sticksActive = forward != 0 || strafe != 0 || rot != 0;
+        final double steerDeadbandDeg = 1.0;
+
         if (!initializedReferences) {
             mod1reference = mod1P;
             mod2reference = mod2P;
@@ -149,16 +153,21 @@ public class SwerveDrive {
         }
 
         // change coax values into diffy values from pid and power
-        double[] mod1values = mathsOperations
-                .diffyConvert(mod1PID.pidOut(AngleUnit.normalizeDegrees(mod1reference - mod1P)), -mod1power);
+        double mod1Error = AngleUnit.normalizeDegrees(mod1reference - mod1P);
+        double mod2Error = AngleUnit.normalizeDegrees(mod2reference - mod2P);
+        double mod3Error = AngleUnit.normalizeDegrees(mod3reference - mod3P);
+
+        double mod1Steer = Math.abs(mod1Error) < steerDeadbandDeg && !sticksActive ? 0 : mod1PID.pidOut(mod1Error);
+        double mod2Steer = Math.abs(mod2Error) < steerDeadbandDeg && !sticksActive ? 0 : -mod2PID.pidOut(mod2Error);
+        double mod3Steer = Math.abs(mod3Error) < steerDeadbandDeg && !sticksActive ? 0 : -mod3PID.pidOut(mod3Error);
+
+        double[] mod1values = mathsOperations.diffyConvert(mod1Steer, -mod1power);
         mod1m1.setPower(mod1values[0]);
         mod1m2.setPower(mod1values[1]);
-        double[] mod2values = mathsOperations
-                .diffyConvert(-mod2PID.pidOut(AngleUnit.normalizeDegrees(mod2reference - mod2P)), mod2power);
+        double[] mod2values = mathsOperations.diffyConvert(mod2Steer, mod2power);
         mod2m1.setPower(mod2values[0]);
         mod2m2.setPower(mod2values[1]);
-        double[] mod3values = mathsOperations
-                .diffyConvert(-mod3PID.pidOut(AngleUnit.normalizeDegrees(mod3reference - mod3P)), mod3power);
+        double[] mod3values = mathsOperations.diffyConvert(mod3Steer, mod3power);
         mod3m1.setPower(mod3values[0]);
         mod3m2.setPower(mod3values[1]);
 
@@ -169,6 +178,12 @@ public class SwerveDrive {
         telemetry.addData("mod1P", mod1P);
         telemetry.addData("mod2P", mod2P);
         telemetry.addData("mod3P", mod3P);
+        telemetry.addData("mod1Error", mod1Error);
+        telemetry.addData("mod2Error", mod2Error);
+        telemetry.addData("mod3Error", mod3Error);
+        telemetry.addData("mod1Steer", mod1Steer);
+        telemetry.addData("mod2Steer", mod2Steer);
+        telemetry.addData("mod3Steer", mod3Steer);
     }
 
     /**
